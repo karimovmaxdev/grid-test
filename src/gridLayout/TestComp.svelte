@@ -2,7 +2,12 @@
   import {getContext, createEventDispatcher } from 'svelte';
   const data = getContext('mainData');
   const dispatch = createEventDispatcher()
-    
+  
+  function disp() {
+    window.dispatchEvent(
+			new CustomEvent("myEve", { detail: {} }),
+		)
+  };
 
 </script>
   
