@@ -3,17 +3,21 @@
     // const elementResizeDetectorMaker = require("element-resize-detector");
     import {setContext, onMount, createEventDispatcher, onDestroy, beforeUpdate, tick} from 'svelte';
     import {writable} from 'svelte/store';
+    import GridItem from './GridItem.svelte';
+    
+    
+
 
     import elementResizeDetectorMaker from 'element-resize-detector';
 
 
-    import {bottom, compact, getLayoutItem, moveElement, validateLayout, cloneLayout, getAllCollisions} from './helpers/utils';
+    import {bottom, compact, getLayoutItem, moveElement, validateLayout, cloneLayout, getAllCollisions, dispatch} from './helpers/utils';
     import {getBreakpointFromWidth, getColsFromBreakpoint, findOrGenerateResponsiveLayout} from "./helpers/responsiveUtils";
 
     // import GridItem from './GridItem.vue' 
     import {addWindowEventListener, removeWindowEventListener} from "./helpers/DOM";
 
-    const dispatch = createEventDispatcher()
+    // const dispatch = createEventDispatcher()
 
 
     export let autoSize = true;
@@ -88,7 +92,6 @@
         originalLayout,
         positionsBeforeDrag: undefined,
         item,
-        // закончил тут
         layoutUpdate: function() {
             if ($layoutData.layout !== undefined && this.originalLayout !== null && Array.isArray($layoutData.layout)) {
                 if ($layoutData.layout.length !== $layoutData.originalLayout.length) {
@@ -245,8 +248,8 @@
             if (eventName === 'resizeend') dispatch('layout-updated', $layoutData.layout);
         },
         responsiveGridLayout(){
-            let newBreakpoint = getBreakpointFromWidth($layoutData.breakpoints, $layoutData.width);
-            let newCols = getColsFromBreakpoint(newBreakpoint, $layoutData.cols);
+            let newBreakpoint = getBreakpointFromWidth($layoutData.breakpoints(), $layoutData.width);
+            let newCols = getColsFromBreakpoint(newBreakpoint, $layoutData.cols());
 
             // save actual layout in layouts
             if($layoutData.lastBreakpoint != null && !$layoutData.layouts[$layoutData.lastBreakpoint])
@@ -256,7 +259,7 @@
             let layout = findOrGenerateResponsiveLayout(
                 $layoutData.originalLayout,
                 $layoutData.layouts,
-                $layoutData.breakpoints,
+                $layoutData.breakpoints(),
                 newBreakpoint,
                 $layoutData.lastBreakpoint,
                 newCols,
@@ -274,7 +277,7 @@
             dispatch('update:layout', layout);
 
             $layoutData.lastBreakpoint = newBreakpoint;
-            dispatch("setColNum", getColsFromBreakpoint(newBreakpoint, $layoutData.cols));
+            dispatch("setColNum", getColsFromBreakpoint(newBreakpoint, $layoutData.cols()));
         },
         initResponsiveFeatures(){
             // clear layouts
@@ -335,8 +338,6 @@
         // mounted во vue
         dispatch('layout-mounted', self.layout);
         // было завернуто в tick
-        console.log(self.layout)
-        await tick()
         validateLayout(self.layout);
         self.originalLayout = self.layout;
         // const self = this;
@@ -379,7 +380,7 @@
             $layoutData.erd.uninstall($layoutData.item);
         }
     });
-    $: console.log($layoutData )
+
     function width_watch (newval, oldval) {
         const self = $layoutData;
         //this.$broadcast("updateWidth", this.width);
@@ -468,14 +469,17 @@
 </script>
 
 <div id="grid-layout" bind:this={$layoutData.item} class="vue-grid-layout" >
-    <!-- <slot></slot>
-    <grid-item class="vue-grid-placeholder"
-                v-show="isDragging"
-                :x="placeholder.x"
-                :y="placeholder.y"
-                :w="placeholder.w"
-                :h="placeholder.h"
-                :i="placeholder.i"></grid-item> -->
+    <slot/>
+    {#if $layoutData.isDragging}
+        <GridItem
+            x={$layoutData.placeholder.x}
+            y={$layoutData.placeholder.y}
+            w={$layoutData.placeholder.w}
+            h={$layoutData.placeholder.h}
+            i={$layoutData.placeholder.i}>
+        </GridItem>
+    {/if}
+
 </div>
 
 <style>

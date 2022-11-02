@@ -2,7 +2,7 @@
 <script>
     import {onMount, setContext} from 'svelte';
     import {writable} from 'svelte/store';
-    // import GridItem from './components/GridItem.vue';
+    import GridItem from './GridItem.svelte';
     import GridLayout from './GridLayout.svelte';
     // import TestElement from './components/TestElement.vue';
     // import CustomDragElement from './components/CustomDragElement.vue';
@@ -138,19 +138,19 @@
     };
 
     function layoutCreatedEvent(event){
-        console.log("Created layout: ", event.detail)
+        console.log("Created layout: ", event.detail.payload)
     };
-    function layoutBeforeMountEvent(newLayout){
-        console.log("beforeMount layout: ", newLayout)
+    function layoutBeforeMountEvent(event){
+        console.log("beforeMount layout: ", event.detail.payload)
     };
-    function layoutMountedEvent(newLayout){
-        console.log("Mounted layout: ", newLayout)
+    function layoutMountedEvent(event){
+        console.log("Mounted layout: ", event.detail.payload)
     };
-    function layoutReadyEvent(newLayout){
-        console.log("Ready layout: ", newLayout)
+    function layoutReadyEvent(event){
+        console.log("Ready layout: ", event.detail.payload)
     };
-    function layoutUpdatedEvent(newLayout){
-        console.log("Updated layout: ", newLayout)
+    function layoutUpdatedEvent(event){
+        console.log("Updated layout: ", event.detail.payload)
     };
     function breakpointChangedEvent(newBreakpoint, newLayout){
         console.log("breakpoint changed breakpoint=", newBreakpoint, ", layout: ", newLayout );
@@ -160,7 +160,19 @@
 
     window.addEventListener('testEvent', (e) => console.log(e))
 </script>
-
+<svelte:window 
+    on:layout-created={layoutCreatedEvent}
+    on:layout-before-mount={layoutBeforeMountEvent}
+    on:layout-mounted={layoutMountedEvent}
+    on:layout-ready={layoutReadyEvent}
+    on:layout-updated={layoutUpdatedEvent}
+    on:breakpoint-changed={breakpointChangedEvent}
+    on:resize={resize}
+    on:move={move}
+    on:resized={resized}
+    on:container-resized={containerResized}
+    on:moved={moved}
+/>
 <TestComp on:msg-defis={(e) => console.log(e)}/>
 <div id="appWrapper">
     <h1 style="text-align: center">Vue Grid Layout</h1>
@@ -200,51 +212,42 @@
         </div>
         <!-- поле айди прокинул инлайн в самом компоненте grid-layout -->
         <GridLayout
-                id="grid-layout"
-                margin={[parseInt($data.marginX), parseInt($data.marginY)]}
-                layout={$data.layout}
-                testLayout.data={$data.layout}
-                colNum={parseInt($data.colNum)}
-                rowHeight={$data.rowHeight}
-                isDraggable={$data.draggable}
-                isResizable={$data.resizable}
-                isMirrored={$data.mirrored}
-                isBounded={$data.bounded}
-                preventCollision={$data.preventCollision}
-                verticalCompact={$data.compact}
-                restoreOnDrag={$data.restoreOnDrag}
-                useCssTransforms={true}
-                responsive={$data.responsive}
-                transformScale={$data.transformScale}
-                on:layout-created={layoutCreatedEvent}
-                on:layout-before-mount={layoutBeforeMountEvent}
-                on:layout-mounted={layoutMountedEvent}
-                on:layout-ready={layoutReadyEvent}
-                on:layout-updated={layoutUpdatedEvent}
-                on:breakpoint-changed={breakpointChangedEvent}
+            id="grid-layout"
+            margin={[parseInt($data.marginX), parseInt($data.marginY)]}
+            layout={$data.layout}
+            testLayout.data={$data.layout}
+            colNum={parseInt($data.colNum)}
+            rowHeight={$data.rowHeight}
+            isDraggable={$data.draggable}
+            isResizable={$data.resizable}
+            isMirrored={$data.mirrored}
+            isBounded={$data.bounded}
+            preventCollision={$data.preventCollision}
+            verticalCompact={$data.compact}
+            restoreOnDrag={$data.restoreOnDrag}
+            useCssTransforms={true}
+            responsive={$data.responsive}
+            transformScale={$data.transformScale}
         >
-            <!-- <grid-item v-for="item in layout" :key="item.i"
-                        :static="item.static"
-                        :x="item.x"
-                        :y="item.y"
-                        :w="item.w"
-                        :h="item.h"
-                        :i="item.i"
-                        :min-w="item.minW"
-                        :max-w="item.maxW"
-                        :min-x="item.minX"
-                        :max-x="item.maxX"
-                        :min-y="item.minY"
-                        :max-y="item.maxY"
-                        :preserve-aspect-ratio="item.preserveAspectRatio"
-                        @resize="resize"
-                        @move="move"
-                        @resized="resized"
-                        @container-resized="containerResized"
-                        @moved="moved"
-            >
-                <test-element :text="item.i" @removeItem="removeItem($event)"></test-element>
-            </grid-item> -->
+            {#each $data.layout as item}
+                <GridItem
+                    _static={item.static}
+                    x={item.x}
+                    y={item.y}
+                    w={item.w}
+                    h={item.h}
+                    i={item.i}
+                    minW={item.minW}
+                    maxW={item.maxW}
+                    minX={item.minX}
+                    maxX={item.maxX}
+                    minY={item.minY}
+                    maxY={item.maxY}
+                    preserveAspectRatio={item.preserveAspectRatio}
+                    >
+                        <!-- <test-element :text="item.i" @removeItem="removeItem($event)"></test-element> -->
+                </GridItem>
+            {/each}
         </GridLayout>
         <hr/>
     </div>

@@ -1,4 +1,9 @@
 // @flow
+export function dispatch(type, payload) {
+  window.dispatchEvent(
+    new CustomEvent(type, { detail: {payload} }),
+  )
+}
 // export type LayoutItemRequired = {w: number, h: number, x: number, y: number, i: string};
 // export type LayoutItem = LayoutItemRequired &
 //                          {minW?: number, minH?: number, maxW?: number, maxH?: number,
