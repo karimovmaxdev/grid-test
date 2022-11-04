@@ -15,7 +15,9 @@ import {cloneLayout, compact, correctBounds} from './utils';
 //  * @return {String}       Highest breakpoint that is less than width.
  
 // export function getBreakpointFromWidth(breakpoints: Breakpoints, width: number): Breakpoint {
-export function getBreakpointFromWidth(breakpoints = 1920, width) {
+export function getBreakpointFromWidth(breakpoints, width) {
+  console.log('----------------NEW: ', breakpoints  )
+  console.log('----------------WIDTH: ', width)
 
   const sorted = sortBreakpoints(breakpoints);
   let matching = sorted[0];

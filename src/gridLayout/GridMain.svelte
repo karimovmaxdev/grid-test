@@ -4,7 +4,7 @@
     import {writable} from 'svelte/store';
     import GridItem from './GridItem.svelte';
     import GridLayout from './GridLayout.svelte';
-    // import TestElement from './components/TestElement.vue';
+    import TestElement from './TestElement.svelte';
     // import CustomDragElement from './components/CustomDragElement.vue';
     import {getDocumentDir, setDocumentDir} from "./helpers/DOM";
     import TestComp from './TestComp.svelte';
@@ -84,10 +84,11 @@
         $data.transformScale = 1
         document.getElementById("grid-layout").style.transform = "scale(1)";
     };
-    function removeItem(i) {
-        console.log("### REMOVE " + i);
-        const index = $data.layout.map(item => item.i).indexOf(i);
-        $data.layout.splice(index, 1);
+    function removeItem(e) {
+        const i = e.detail.payload.text;
+        const index = $data.layout.filter(item => item.i != i);
+        $data.layout = index;
+        // $data.layout.splice(index, 1);
     };
     function addItem() {
         let item = {"x":0,"y":0,"w":2,"h":2,"i":$data.index+"", whatever: "bbb"};
@@ -120,7 +121,8 @@
     function resized(i, newH, newW, newHPx, newWPx){
         console.log("### RESIZED i=" + i + ", H=" + newH + ", W=" + newW + ", H(px)=" + newHPx + ", W(px)=" + newWPx);
     };
-    function containerResized(i, newH, newW, newHPx, newWPx){
+    function containerResized(e) {
+        const {i, h: newH, w: newW, height: newHPx, width: newWPx} = e.detail.payload;   
         console.log("### CONTAINER RESIZED i=" + i + ", H=" + newH + ", W=" + newW + ", H(px)=" + newHPx + ", W(px)=" + newWPx);
     };
     /**
@@ -152,15 +154,26 @@
     function layoutUpdatedEvent(event){
         console.log("Updated layout: ", event.detail.payload)
     };
-    function breakpointChangedEvent(newBreakpoint, newLayout){
+    function breakpointChangedEvent(e){
+        let {newBreakpoint, layout: newLayout} = e.detail.payload;
         console.log("breakpoint changed breakpoint=", newBreakpoint, ", layout: ", newLayout );
     };
 
-    console.log($data)
-
-    window.addEventListener('testEvent', (e) => console.log(e))
+    // window.addEventListener('testEvent', (e) => console.log(e))
+    window.addEventListener('layout-created', layoutCreatedEvent);
+    window.addEventListener('layout-before-mount', layoutBeforeMountEvent);
+    window.addEventListener('layout-mounted', layoutMountedEvent);
+    window.addEventListener('layout-ready', layoutReadyEvent);
+    window.addEventListener('breakpoint-changed', breakpointChangedEvent);
+    window.addEventListener('resize', resize);
+    window.addEventListener('move', move);
+    window.addEventListener('resized', resized);
+    window.addEventListener('layout-created', layoutCreatedEvent);
+    window.addEventListener('container-resized', containerResized);
+    window.addEventListener('moved', moved);
+    window.addEventListener('removeItem', removeItem)
 </script>
-<svelte:window 
+<!-- <svelte:window 
     on:layout-created={layoutCreatedEvent}
     on:layout-before-mount={layoutBeforeMountEvent}
     on:layout-mounted={layoutMountedEvent}
@@ -172,7 +185,7 @@
     on:resized={resized}
     on:container-resized={containerResized}
     on:moved={moved}
-/>
+/> -->
 <TestComp on:msg-defis={(e) => console.log(e)}/>
 <div id="appWrapper">
     <h1 style="text-align: center">Vue Grid Layout</h1>
@@ -245,7 +258,7 @@
                     maxY={item.maxY}
                     preserveAspectRatio={item.preserveAspectRatio}
                     >
-                        <!-- <test-element :text="item.i" @removeItem="removeItem($event)"></test-element> -->
+                        <TestElement text={item.i} on:removeItem={removeItem}></TestElement>
                 </GridItem>
             {/each}
         </GridLayout>

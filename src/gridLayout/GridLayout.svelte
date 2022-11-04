@@ -1,7 +1,7 @@
 <script>
     // import Vue from 'vue';
     // const elementResizeDetectorMaker = require("element-resize-detector");
-    import {setContext, onMount, createEventDispatcher, onDestroy, beforeUpdate, tick} from 'svelte';
+    import {setContext, onMount, createEventDispatcher, onDestroy, beforeUpdate, tick, getContext} from 'svelte';
     import {writable} from 'svelte/store';
     import GridItem from './GridItem.svelte';
     
@@ -18,8 +18,8 @@
     import {addWindowEventListener, removeWindowEventListener} from "./helpers/DOM";
 
     // const dispatch = createEventDispatcher()
-
-
+    const mainData = getContext('mainData')
+    $: console.log($mainData.layout)
     export let autoSize = true;
     export let colNum = 12;
     export let rowHeight = 150;
@@ -44,7 +44,7 @@
     export let cols = function() {return{ lg: 12, md: 10, sm: 6, xs: 4, xxs: 2 }};
     export let preventCollision = false;
     export let useStyleCursor = true;
-    export let width = null;
+    export let width = 1920;
     export let mergedStyle = {};
     export let lastLayoutLength = 0;
     export let isDragging = false;
@@ -187,7 +187,7 @@
             $layoutData.updateHeight();
             if (eventName === 'dragend') {
                 delete $layoutData.positionsBeforeDrag;
-                dispatch('layout-updated', this.layout);
+                dispatch('layout-updated', $layoutData.layout);
             }
         },
         resizeEvent: function (eventName, id, x, y, h, w) {
@@ -233,7 +233,7 @@
                 $layoutData.placeholder.h = l.h;
                 $layoutData.isDragging = true;
                 //this.$broadcast("updateWidth", this.width);
-                dispatch("updateWidth", this.width);
+                dispatch("updateWidth", $layoutData.width);
 
             } else {
                 $layoutData.isDragging = false;
@@ -265,12 +265,18 @@
                 newCols,
                 $layoutData.verticalCompact
             );
-
+            console.log("$layoutData.originalLayout,- ", $layoutData.originalLayout)
+            console.log("$layoutData.layouts,,- ", $layoutData.layouts,)
+            console.log("$layoutData.breakpoints(),- ", $layoutData.breakpoints())
+            console.log("newBreakpoint, ", newBreakpoint,)
+            console.log("$layoutData.lastBreakpoint,", $layoutData.lastBreakpoint,)
+            console.log("newCols", newCols,)
+            console.log("$layoutData.verticalCompact", $layoutData.verticalCompact,)
             // Store the new layout.
             $layoutData.layouts[newBreakpoint] = layout;
 
             if ($layoutData.lastBreakpoint !== newBreakpoint) {
-                dispatch('breakpoint-changed', newBreakpoint, layout);
+                dispatch('breakpoint-changed', {newBreakpoint, layout});
             }
 
             // new prop sync
@@ -309,18 +315,19 @@
 
     // let resizeEventHandler;
     // let dragEventHandler;
-
+    let resizeEventHandler;
+    let dragEventHandler;
     onMount(async() => {
         // creation()
         dispatch('layout-before-mount', $layoutData.layout);
         const self = $layoutData;
         self.resizeEvent()
         // Accessible refernces of functions for removing in beforeDestroy
-        function resizeEventHandler(eventType, i, x, y, h, w) {
+        resizeEventHandler = function (eventType, i, x, y, h, w) {
             self.resizeEvent(eventType, i, x, y, h, w);
         };
 
-        function dragEventHandler(eventType, i, x, y, h, w) {
+        dragEventHandler = function (eventType, i, x, y, h, w) {
             self.dragEvent(eventType, i, x, y, h, w);
         };
         // Эти события создаются в gridItem. переделать в будущем по аналогии с TestComp 
@@ -465,8 +472,17 @@
         $layoutData.updateHeight();
     };
     $: margin_watch(), $layoutData.margin;
-    
+
+    window.addEventListener('resizeEvent', resizeEventHandler);
+    window.addEventListener('dragEvent', dragEventHandler);
+
+    $: console.log($layoutData.layout)
 </script>
+
+<!-- <svelte:window 
+on:resizeEvent={resizeEventHandler}
+on:dragEvent={dragEventHandler}
+/> -->
 
 <div id="grid-layout" bind:this={$layoutData.item} class="vue-grid-layout" >
     <slot/>

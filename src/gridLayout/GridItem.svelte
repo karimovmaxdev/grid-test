@@ -157,7 +157,7 @@
                     return;
                 styleProps[prop] = matches[1];
             }
-            dispatch("container-resized", {detail: {i: itemData.i, h: itemData.h, w: itemData.w, height: styleProps.height, width: styleProps.width}});
+            dispatch("container-resized", {i: itemData.i, h: itemData.h, w: itemData.w, height: styleProps.height, width: styleProps.width});
         },
         handleResize: function (event) {
             if (itemData._static) return;
@@ -230,12 +230,12 @@
             itemData.lastH = y;
 
             if (itemData.innerW !== pos.w || itemData.innerH !== pos.h) {
-                dispatch("resize", {detail: {i:itemData.i, h:pos.h, w:pos.w, heigth:newSize.height, width:newSize.width}});
+                dispatch("resize", {i:itemData.i, h:pos.h, w:pos.w, heigth:newSize.height, width:newSize.width});
             }
             if (event.type === "resizeend" && (itemData.previousW !== itemData.innerW || itemData.previousH !== itemData.innerH)) {
-                dispatch("resized", {detail: {i: itemData.i, h: pos.h, w: pos.w, heigth: newSize.height, width: newSize.width}});
+                dispatch("resized",  {i: itemData.i, h: pos.h, w: pos.w, heigth: newSize.height, width: newSize.width});
             }
-            dispatch("resizeEvent", {detail: {type: event.type, i: itemData.i, innerX: itemData.innerX, innerY: itemData.innerY, h: pos.h, w: pos.w}});
+            dispatch("resizeEvent", {type: event.type, i: itemData.i, innerX: itemData.innerX, innerY: itemData.innerY, h: pos.h, w: pos.w});
         },
         handleDrag(event) {
             if (itemData._static) return;
@@ -329,14 +329,14 @@
             itemData.lastY = y;
 
             if (itemData.innerX !== pos.x || itemData.innerY !== pos.y) {
-                dispatch("move", {detail: { i: itemData.i, x: pos.x, y: pos.y}});
+                dispatch("move", { i: itemData.i, x: pos.x, y: pos.y});
             }
             if (event.type === "dragend" && (itemData.previousX !== itemData.innerX || itemData.previousY !== itemData.innerY)) {
-                dispatch("moved", {detail: {i: itemData.i, x: pos.x, y: pos.y}});
+                dispatch("moved", {i: itemData.i, x: pos.x, y: pos.y});
             }
             // eventBuss ??? подумать
             // this.eventBus.$emit("dragEvent", event.type, itemData.i, pos.x, pos.y, itemData.innerH, itemData.innerW);
-            dispatch("dragEvent", {detail: {type: event.type, i: itemData.i, x: pos.x, y: pos.y, innerH: itemData.innerH, innerW: itemData.innerW}});
+            dispatch("dragEvent", {type: event.type, i: itemData.i, x: pos.x, y: pos.y, innerH: itemData.innerH, innerW: itemData.innerW});
 
         },
         calcPosition: function (x, y, w, h) {
@@ -423,7 +423,9 @@
         },
         tryMakeDraggable: function(){
             const self = itemData;
+            if(itemData.item === undefined) return
             if (itemData.interactObj === null || itemData.interactObj === undefined) {
+                console.log(itemData.item)
                 itemData.interactObj = interact(itemData.item);
                 if (!itemData.useStyleCursor) {
                     itemData.interactObj.styleCursor(false);
@@ -450,6 +452,7 @@
             }
         },
         tryMakeResizable: function(){
+            if(itemData.item === undefined) return
             const self = itemData;
             if (itemData.interactObj === null || itemData.interactObj === undefined) {
                 itemData.interactObj = interact(itemData.item);
@@ -468,8 +471,8 @@
                     // allowFrom: "." + this.resizableHandleClass.trim().replace(" ", "."),
                     edges: {
                         left: false,
-                        right: "." + itemData.resizableHandleClass.trim().replace(" ", "."),
-                        bottom: "." + itemData.resizableHandleClass.trim().replace(" ", "."),
+                        right: "." + itemData.resizableHandleClass().trim().replace(" ", "."),
+                        bottom: "." + itemData.resizableHandleClass().trim().replace(" ", "."),
                         top: false
                     },
                     ignoreFrom: itemData.resizeIgnoreFrom,
@@ -539,13 +542,12 @@
             // this.lastH = y;
 
             if (itemData.innerW !== pos.w || itemData.innerH !== pos.h) {
-                dispatch("resize", {detail : {i: itemData.i, h: pos.h, w: pos.w, heigth: newSize.height, width: newSize.width}});
+                dispatch("resize",  {i: itemData.i, h: pos.h, w: pos.w, heigth: newSize.height, width: newSize.width});
             }
             if (itemData.previousW !== pos.w || itemData.previousH !== pos.h) {
-                dispatch("resized", {detail: {i: itemData.i, h: pos.h, w: pos.w, height: newSize.height, width: newSize.width}});
+                dispatch("resized",  {i: itemData.i, h: pos.h, w: pos.w, height: newSize.height, width: newSize.width});
                 // this.eventBus.$emit("resizeEvent", "resizeend", this.i, this.innerX, this.innerY, pos.h, pos.w);
-                dispatch("resizeEvent", {detail : {type:"resizeend", i: itemData.i, innerX: itemData.innerX, innerY: itemData.innerY, h: pos.h, w: pos.w}});
-
+                dispatch("resizeEvent", {type:"resizeend", i: itemData.i, innerX: itemData.innerX, innerY: itemData.innerY, h: pos.h, w: pos.w});
             }
         },
 
@@ -638,30 +640,216 @@
         };
 
         self.directionchangeHandler = () => {
-            this.rtl = getDocumentDir() === 'rtl';
-            this.compact();
+            itemData.rtl = getDocumentDir() === 'rtl';
+            itemData.compact();
         };
 
         self.setColNum = (colNum) => {
             self.cols = parseInt(colNum);
         }
 
-        this.eventBus.$on('updateWidth', self.updateWidthHandler);
-        this.eventBus.$on('compact', self.compactHandler);
-        this.eventBus.$on('setDraggable', self.setDraggableHandler);
-        this.eventBus.$on('setResizable', self.setResizableHandler);
-        this.eventBus.$on('setBounded', self.setBoundedHandler);
-        this.eventBus.$on('setTransformScale', self.setTransformScaleHandler)
-        this.eventBus.$on('setRowHeight', self.setRowHeightHandler);
-        this.eventBus.$on('setMaxRows', self.setMaxRowsHandler);
-        this.eventBus.$on('directionchange', self.directionchangeHandler);
-        this.eventBus.$on('setColNum', self.setColNum)
+        // this.eventBus.$on('updateWidth', self.updateWidthHandler);
+        // this.eventBus.$on('compact', self.compactHandler);
+        // this.eventBus.$on('setDraggable', self.setDraggableHandler);
+        // this.eventBus.$on('setResizable', self.setResizableHandler);
+        // this.eventBus.$on('setBounded', self.setBoundedHandler);
+        // this.eventBus.$on('setTransformScale', self.setTransformScaleHandler)
+        // this.eventBus.$on('setRowHeight', self.setRowHeightHandler);
+        // this.eventBus.$on('setMaxRows', self.setMaxRowsHandler);
+        // this.eventBus.$on('directionchange', self.directionchangeHandler);
+        // this.eventBus.$on('setColNum', self.setColNum)
 
-        this.rtl = getDocumentDir() === 'rtl';
+        itemData.rtl = getDocumentDir() === 'rtl';
+
+
+
+        // mounted ////
+        if (itemData.layout.responsive && itemData.layout.lastBreakpoint) {
+                itemData.cols = getColsFromBreakpoint(itemData.layout.lastBreakpoint, itemData.layout.cols);
+            } else {
+                itemData.cols = itemData.layout.colNum;
+            }
+            itemData.rowHeight = itemData.layout.rowHeight;
+            itemData.containerWidth = itemData.layout.width !== null ? itemData.layout.width : 100;
+            itemData.margin = itemData.layout.margin !== undefined ? itemData.layout.margin : [10, 10];
+            itemData.maxRows = itemData.layout.maxRows;
+
+            if (itemData.isDraggable === null) {
+                itemData.draggable = itemData.layout.isDraggable;
+            } else {
+                itemData.draggable = itemData.isDraggable;
+            }
+            if (itemData.isResizable === null) {
+                itemData.resizable = itemData.layout.isResizable;
+            } else {
+                itemData.resizable = itemData.isResizable;
+            }
+            if (itemData.isBounded === null) {
+                itemData.bounded = itemData.layout.isBounded;
+            } else {
+                itemData.bounded = itemData.isBounded;
+            }
+            itemData.transformScale = itemData.layout.transformScale
+            itemData.useCssTransforms = itemData.layout.useCssTransforms;
+            itemData.useStyleCursor = itemData.layout.useStyleCursor;
+            itemData.createStyle();
     })
 
+    onDestroy(() => {
+        let self = itemData;
+            //Remove listeners
+            // this.eventBus.$off('updateWidth', self.updateWidthHandler);
+            // this.eventBus.$off('compact', self.compactHandler);
+            // this.eventBus.$off('setDraggable', self.setDraggableHandler);
+            // this.eventBus.$off('setResizable', self.setResizableHandler);
+            // this.eventBus.$off('setBounded', self.setBoundedHandler);
+            // this.eventBus.$off('setTransformScale', self.setTransformScaleHandler)
+            // this.eventBus.$off('setRowHeight', self.setRowHeightHandler);
+            // this.eventBus.$off('setMaxRows', self.setMaxRowsHandler);
+            // this.eventBus.$off('directionchange', self.directionchangeHandler);
+            // this.eventBus.$off('setColNum', self.setColNum);
+            if (itemData.interactObj) {
+                itemData.interactObj.unset() // destroy interact intance
+            }
+    });
+
+    function isDraggable_watch () {
+        itemData.draggable = itemData.isDraggable;
+    };
+    $: isDraggable_watch(), itemData.isDraggable;
+
+    function _static_watch () {
+        itemData.tryMakeDraggable();
+        itemData.tryMakeResizable();
+    };
+    $: _static_watch(), itemData._static;
+
+    function draggable_watch () {
+        itemData.tryMakeDraggable();
+    };
+    $: draggable_watch(), itemData.draggable;
+
+    function isResizable_watch () {
+        itemData.resizable = itemData.isResizable;
+    };
+    $: isResizable_watch(), itemData.isResizable;
+
+    function isBounded_watch () {
+        itemData.bounded = itemData.isBounded;
+    };
+    $: isBounded_watch(), itemData.isBounded;
+
+    function resizable_watch () {
+        itemData.tryMakeResizable();
+    };
+    $: resizable_watch(), itemData.resizable;
+
+    function rowHeight_watch () {
+        itemData.createStyle();
+        itemData.emitContainerResized();
+    };
+    $: rowHeight_watch(), itemData.rowHeight;
+
+    function cols_watch () {
+        itemData.tryMakeResizable();
+        itemData.createStyle();
+        itemData.emitContainerResized();
+    };
+    $: cols_watch(), itemData.cols, itemData.item;
+
+    function containerWidth_watch () {
+        itemData.tryMakeResizable();
+        itemData.createStyle();
+        itemData.emitContainerResized();
+    };
+    $: containerWidth_watch(), itemData.containerWidth;
+
+    function x_watch (newVal) {
+        itemData.innerX = newVal;
+        itemData.createStyle();
+    };
+    x_watch(itemData.x), itemData.x;
+
+    function y_watch (newVal) {
+        itemData.innerY = newVal;
+        itemData.createStyle();
+    };
+    $: y_watch(itemData.y), itemData.y;
+
+    function h_watch (newVal) {
+        itemData.innerH = newVal
+        itemData.createStyle();
+        // this.emitContainerResized();
+    };
+    $:h_watch(itemData.h), itemData.h;
+
+    function w_watch(newVal) {
+        itemData.innerW = newVal;
+        itemData.createStyle();
+        // this.emitContainerResized();
+    };
+    $: w_watch(itemData.w), itemData.w;
+
+    function renderRtl_watch () {
+        // console.log("### renderRtl");
+        itemData.tryMakeResizable();
+        itemData.createStyle();
+    };
+    $: renderRtl_watch(), itemData.renderRtl;
+
+    function minH_watch () {
+        itemData.tryMakeResizable();
+    };
+    $: minH_watch(), itemData.minH;
+
+    function maxH_watch() {
+        itemData.tryMakeResizable();
+    };
+    $: maxH_watch(), itemData.maxH;
+
+    function minW_watch() {
+        itemData.tryMakeResizable();
+    };
+    $: minW_watch(), itemData.minW;
+
+    function maxW_watch() {
+        itemData.tryMakeResizable();
+    };
+    $: maxW_watch(), itemData.maxW;
+
+    // "$parent.margin": function (margin) {
+    //     if (!margin || (margin[0] == this.margin[0] && margin[1] == this.margin[1])) {
+    //         return;
+    //     }
+    //     this.margin = margin.map(m => Number(m));
+    //     this.createStyle();
+    //     this.emitContainerResized();
+    // }
+    window.addEventListener('resizupdateWidtheEvent', itemData.updateWidthHandler);
+    window.addEventListener('compact', itemData.compactHandler);
+    window.addEventListener('setDraggable', itemData.setDraggableHandler);
+    window.addEventListener('setResizable', itemData.setResizableHandler);
+    window.addEventListener('setBounded', itemData.setBoundedHandler);
+    window.addEventListener('setTransformScale', itemData.setTransformScaleHandler);
+    window.addEventListener('setRowHeight', itemData.setRowHeightHandler);
+    window.addEventListener('resizeEvent', itemData.setMaxRowsHandler);
+    window.addEventListener('directionchange', itemData.directionchangeHandler);
+    window.addEventListener('directionchange', itemData.setColNum);
+    
 </script>
 
+<!-- <svelte:window
+    on:updateWidth={itemData.updateWidthHandler}
+    on:compact={itemData.compactHandler}
+    on:setDraggable={itemData.setDraggableHandler}
+    on:setResizable={itemData.setResizableHandler}
+    on:setBounded={itemData.setBoundedHandler}
+    on:setTransformScale={itemData.setTransformScaleHandler}
+    on:setRowHeight={itemData.setRsetMaxRowsowHeightHandler}
+    on:setMaxRows={itemData.setMaxRowsHandler}
+    on:directionchange={itemData.directionchangeHandler}
+    on:directionchange={itemData.setColNum}
+/> -->
 <div 
     bind:this={itemData.item}
     class={"vue-grid-item" + ' ' + 'vue-grid-placeholder' + ' ' + itemData.classObj()}
@@ -677,6 +865,9 @@
         transition: all 200ms ease;
         transition-property: left, top, right;
         /* add right for rtl */
+        width: 100px;
+        height: 100px;
+        background-color: red;
     }
 
     .vue-grid-item.no-touch {
