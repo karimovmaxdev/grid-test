@@ -865,9 +865,6 @@
         transition: all 200ms ease;
         transition-property: left, top, right;
         /* add right for rtl */
-        width: 100px;
-        height: 100px;
-        background-color: red;
     }
 
     .vue-grid-item.no-touch {
